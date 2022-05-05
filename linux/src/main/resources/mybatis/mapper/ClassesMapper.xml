@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.ClassesMapper">
+
+    <select id="queryClassesList" resultType="Classes">
+        select *
+        from classes
+        where status = 1
+    </select>
+
+    <select id="queryClassesByUserId" resultType="Classes">
+        select *
+        from classes
+        where status = 1
+          and user_id = #{id}
+    </select>
+
+    <select id="queryClassesById" resultType="Classes">
+        select *
+        from classes
+        where status = 1
+          and id = #{id}
+    </select>
+
+    <insert id="addClasses" parameterType="Classes" useGeneratedKeys="true" keyProperty="id">
+        insert into classes (name, user_id)
+        values (#{name}, #{userId})
+    </insert>
+
+    <update id="updateClasses" parameterType="Classes">
+        update classes
+        set name = #{name}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteClasses" parameterType="int">
+        update classes
+        set status = -1
+        where id = #{id}
+    </delete>
+
+    <delete id="batchDeleteClasses" parameterType="String">
+        update classes set status = -1 where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+</mapper>

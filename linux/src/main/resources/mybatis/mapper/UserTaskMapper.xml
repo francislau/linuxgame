@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.UserTaskMapper">
+
+    <select id="queryUserTaskList" resultMap="UserTask">
+        select *, t.id task_id
+        from user_task ut
+                 left join task t on ut.task_id = t.id
+        where ut.status = 1
+    </select>
+
+    <select id="queryUserTaskById" resultMap="UserTask">
+        select *, t.id task_id
+        from user_task ut
+                 left join task t on ut.task_id = t.id
+        where ut.status = 1
+          and ut.id = #{id}
+    </select>
+
+    <select id="queryUserTaskByUserId" resultMap="UserTask">
+        select *, t.id task_id
+        from user_task ut
+                 left join user u on ut.user_id = u.id
+                 left join task t on ut.task_id = t.id
+        where ut.status = 1
+          and u.status = 1
+          and ut.user_id = #{id}
+    </select>
+
+    <select id="queryUserTaskOpenedByUserId" resultMap="UserTask">
+        select *, t.id task_id
+        from user_task ut
+                 left join user u on ut.user_id = u.id
+                 left join task t on ut.task_id = t.id
+                 left join user_task_open uto on u.stu_class = uto.class_id and ut.task_id = uto.task_id
+        where ut.status = 1
+          and u.status = 1
+          and uto.status = 1
+          and ut.user_id = #{id}
+    </select>
+
+    <select id="queryUserTaskByClassId" resultMap="UserTask">
+        select *, t.id task_id
+        from user_task ut
+                 left join user u on ut.user_id = u.id
+                 left join task t on ut.task_id = t.id
+        where ut.status = 1
+          and u.status = 1
+          and u.stu_class = #{id}
+    </select>
+
+    <select id="queryUserTaskByClassIdAndOrderBy" resultMap="UserTask">
+        select *, t.id task_id
+        from user_task ut
+                 left join user u on ut.user_id = u.id
+                 left join task t on ut.task_id = t.id
+        where ut.status = 1
+          and u.status = 1
+          and u.stu_class = #{id}
+        order by ${orderBy}
+    </select>
+
+    <resultMap id="UserTask" type="UserTask">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="rand" column="rand"/>
+        <result property="taskOrder" column="task_order"/>
+        <result property="taskRatio" column="task_ratio"/>
+        <result property="taskScore" column="task_score"/>
+        <result property="taskScorePass" column="task_score_pass"/>
+        <result property="taskScoreLength" column="task_score_length"/>
+        <result property="taskScoreAttempt" column="task_score_attempt"/>
+        <result property="attempt" column="attempt"/>
+        <result property="startAt" column="start_at"/>
+        <result property="passAt" column="pass_at"/>
+        <result property="length" column="length"/>
+        <result property="attemptRank" column="attempt_rank"/>
+        <result property="lengthRank" column="length_rank"/>
+        <result property="passRank" column="pass_rank"/>
+        <result property="taskStatus" column="task_status"/>
+        <result property="practiseScore" column="practise_score"/>
+        <result property="practiseScoreFirstPass" column="practise_score_first_pass"/>
+        <result property="practiseScoreLength" column="practise_score_length"/>
+        <result property="practiseScoreAttempt" column="practise_score_attempt"/>
+        <result property="practiseAttempt" column="practise_attempt"/>
+        <result property="practiseStartAt" column="practise_start_at"/>
+        <result property="practiseMinStartAt" column="practise_min_start_at"/>
+        <result property="practiseMinPassAt" column="practise_min_pass_at"/>
+        <result property="practiseMinLength" column="practise_min_length"/>
+        <result property="practiseFirstPassAt" column="practise_first_pass_at"/>
+        <result property="practiseAttemptRank" column="practise_attempt_rank"/>
+        <result property="practiseMinLengthRank" column="practise_min_length_rank"/>
+        <result property="practiseFirstPassRank" column="practise_first_pass_rank"/>
+        <result property="createAt" column="create_at"/>
+        <association property="task" javaType="Task">
+            <id property="id" column="task_id"/>
+            <result property="taskSn" column="task_sn"/>
+            <result property="taskTitle" column="task_title"/>
+            <result property="taskDesc" column="task_desc"/>
+            <result property="command" column="command"/>
+            <result property="errorMessage" column="error_message"/>
+        </association>
+    </resultMap>
+
+    <delete id="deleteUserTask" parameterType="int">
+        update user_task
+        set status = -1
+        where id = #{id}
+    </delete>
+
+    <insert id="addUserTask" parameterType="UserTask" useGeneratedKeys="true" keyProperty="id">
+        insert into user_task(user_id, task_id, task_ratio, rand, task_order)
+        values (#{userId}, #{taskId}, #{taskRatio},
+                concat(char(floor(rand()*26)+97),substring(md5(rand()), floor(rand() * 26) + 1, 5)),
+                ifnull(
+                        (select task_order from user_task ut where user_id = #{userId} order by task_order desc limit 1) + 1,
+                1
+            )) ON DUPLICATE KEY
+        update user_id=user_id
+    </insert>
+
+    <update id="updateUserTask" parameterType="UserTask">
+        update user_task
+        <trim prefix="set" suffixOverrides=",">
+            <if test="id!=null">id = #{id},</if>
+            <if test="taskOrder!=null and taskOrder!=-1">task_order = #{taskOrder},</if>
+
+            <if test="taskRatio!=null and taskRatio!=-1">task_ratio = #{taskRatio},</if>
+            <if test="taskScore!=null and taskScore!=-1">task_score = #{taskScore},</if>
+            <if test="taskScorePass!=null and taskScorePass!=-1">task_score_pass = #{taskScorePass},</if>
+            <if test="taskScoreLength!=null and taskScoreLength!=-1">task_score_length = #{taskScoreLength},</if>
+            <if test="taskScoreAttempt!=null and taskScoreAttempt!=-1">task_score_attempt = #{taskScoreAttempt},</if>
+
+            <!--            <if test="taskScore!=null and taskScore!=0">task_score = #{taskScore},</if>-->
+            <!--            <if test="taskScore!=null and taskScore==-1">task_score = 0,</if>-->
+
+            <!--            <if test="taskScorePass!=null and taskScorePass!=0">task_score_pass = #{taskScorePass},</if>-->
+            <!--            <if test="taskScorePass!=null and taskScorePass==-1">task_score_pass = 0,</if>-->
+
+            <!--            <if test="taskScoreLength!=null and taskScoreLength!=0">task_score_length = #{taskScoreLength},</if>-->
+            <!--            <if test="taskScoreLength!=null and taskScoreLength==-1">task_score_length = 0,</if>-->
+
+            <!--            <if test="taskScoreAttempt!=null and taskScoreAttempt!=0">task_score_attempt = #{taskScoreAttempt},</if>-->
+            <!--            <if test="taskScoreAttempt!=null and taskScoreAttempt==-1">task_score_attempt = 0,</if>-->
+
+            <if test="attempt!=null and attempt!=-1">attempt = #{attempt},</if>
+
+            <if test="startAt!=null">start_at = #{startAt},</if>
+            <if test="passAt!=null">pass_at = #{passAt},</if>
+
+            <if test="length!=null and length!=-1">`length` = #{length},</if>
+
+            <if test="attemptRank!=null and attemptRank!=-1">attempt_rank = #{attemptRank},</if>
+            <if test="lengthRank!=null and lengthRank!=-1">length_rank = #{lengthRank},</if>
+            <if test="passRank!=null and passRank!=-1">pass_rank = #{passRank},</if>
+            <if test="taskStatus!=null and taskStatus!=-1">task_status = #{taskStatus},</if>
+            <if test="practiseScore!=null and practiseScore!=-1">practise_score = #{practiseScore},</if>
+            <if test="practiseScoreFirstPass!=null and practiseScoreFirstPass!=-1">practise_score_first_pass =
+                #{practiseScoreFirstPass},
+            </if>
+            <if test="practiseScoreLength!=null and practiseScoreLength!=-1">practise_score_length =
+                #{practiseScoreLength},
+            </if>
+            <if test="practiseScoreAttempt!=null and practiseScoreAttempt!=-1">practise_score_attempt =
+                #{practiseScoreAttempt},
+            </if>
+
+            <!--            <if test="practiseScore!=null and practiseScore!=0">practise_score = #{practiseScore},</if>-->
+            <!--            <if test="practiseScore!=null and practiseScore==-1">practise_score = 0,</if>-->
+
+            <!--            <if test="practiseScoreFirstPass!=null and practiseScoreFirstPass!=0">practise_score_first_pass =-->
+            <!--                #{practiseScoreFirstPass},-->
+            <!--            </if>-->
+            <!--            <if test="practiseScoreFirstPass!=null and practiseScoreFirstPass==-1">practise_score_first_pass = 0,</if>-->
+
+            <!--            <if test="practiseScoreLength!=null and practiseScoreLength!=0">practise_score_length =-->
+            <!--                #{practiseScoreLength},-->
+            <!--            </if>-->
+            <!--            <if test="practiseScoreLength!=null and practiseScoreLength==-1">practise_score_length = 0,</if>-->
+
+            <!--            <if test="practiseScoreAttempt!=null and practiseScoreAttempt!=0">practise_score_attempt =-->
+            <!--                #{practiseScoreAttempt},-->
+            <!--            </if>-->
+            <!--            <if test="practiseScoreAttempt!=null and practiseScoreAttempt==-1">practise_score_attempt = 0,</if>-->
+
+            <if test="practiseAttempt!=null and practiseAttempt!=-1">practise_attempt = #{practiseAttempt},</if>
+
+            <if test="practiseStartAt!=null and practiseStartAt.getTime() != 0">practise_start_at =
+                #{practiseStartAt},
+            </if>
+            <if test="practiseStartAt!=null and practiseStartAt.getTime() == 0">practise_start_at = null,</if>
+
+            <if test="practiseMinStartAt!=null">practise_min_start_at = #{practiseMinStartAt},</if>
+            <if test="practiseMinPassAt!=null">practise_min_pass_at = #{practiseMinPassAt},</if>
+            <if test="practiseMinLength!=null and practiseMinLength!=-1">practise_min_length = #{practiseMinLength},
+            </if>
+            <if test="practiseFirstPassAt!=null">practise_first_pass_at = #{practiseFirstPassAt},</if>
+            <if test="practiseAttemptRank!=null and practiseAttemptRank!=-1">practise_attempt_rank =
+                #{practiseAttemptRank},
+            </if>
+            <if test="practiseMinLengthRank!=null and practiseMinLengthRank!=-1">practise_min_length_rank =
+                #{practiseMinLengthRank},
+            </if>
+            <if test="practiseFirstPassRank!=null and practiseFirstPassRank!=-1">practise_first_pass_rank =
+                #{practiseFirstPassRank},
+            </if>
+        </trim>
+        where id = #{id}
+    </update>
+
+
+    <select id="queryUserTaskOpenListByUserIdAndClassId" resultType="UserTaskOpen">
+        select *
+        from user_task_open
+        where status = 1
+          and user_id = #{userId}
+          and class_id = #{id}
+    </select>
+
+    <insert id="addUserTaskOpen" parameterType="UserTaskOpen">
+        insert into user_task_open(user_id, class_id, task_id, task_order)
+        values
+        <foreach item="item" index="index" collection="userTaskOpen" separator=",">
+            (#{item.userId}, #{item.classId}, #{item.taskId}, #{item.taskOrder})
+        </foreach>
+    </insert>
+
+    <delete id="deleteUserTaskOpen" parameterType="UserTaskOpen">
+        delete from
+        user_task_open where
+        <foreach collection="userTaskOpen" item="item" separator="or">
+            (user_id = #{item.userId} and class_id = #{item.classId} and task_id = #{item.taskId})
+        </foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 日志级别从低到高分为TRACE < DEBUG < INFO < WARN < ERROR < FATAL，如果设置为WARN，则低于WARN的信息都不会输出 -->
+<!-- scan:当此属性设置为true时，配置文档如果发生改变，将会被重新加载，默认值为true -->
+<!-- scanPeriod:设置监测配置文档是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。
+                 当scan为true时，此属性生效。默认的时间间隔为1分钟。 -->
+<!-- debug:当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。 -->
+<configuration scan="true">
+
+    <contextName>logback</contextName>
+
+    <!--定义日志文件的存储地址 勿在 LogBack 的配置中使用相对路径--><!--设置系统日志目录-->
+    <property name="LOG_NAME" value="D:/XXX"/>
+    <property name="LOG_PATH" value="D:/XXX"/>
+    <property name="APPDIR" value="logs"/>
+    <!-- 设置一个表示颜色的变量 -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%date{yyyy-MM-dd HH:mm:ss}    | %highlight(%-5level)  | %boldYellow(%thread)  | %boldGreen(%logger)   | %msg%n"/>
+
+
+    <!-- 说明：
+          1、日志级别及文件
+              日志记录采用分级记录，级别与日志文件名相对应，不同级别的日志信息记录到不同的日志文件中
+              例如：error级别记录到log_error_xxx.log或log_error.log（该文件为当前记录的日志文件），而log_error_xxx.log为归档日志，
+              日志文件按日期记录，同一天内，若日志文件大小等于或大于2M，则按0、1、2...顺序分别命名
+              例如log-level-2013-12-21.0.log
+              其它级别的日志也是如此。
+          2、文件路径
+              若开发、测试用，在Eclipse中运行项目，则到Eclipse的安装路径查找logs文件夹，以相对路径../logs。
+              若部署到Tomcat下，则在Tomcat下的logs文件中
+          3、Appender
+              FILEDEBUG对应debug级别，文件名以log-debug-xxx.log形式命名
+              FILEERROR对应error级别，文件名以log-error-xxx.log形式命名
+              FILEWARN对应warn级别，文件名以log-warn-xxx.log形式命名
+              FILEINFO对应info级别，文件名以log-info-xxx.log形式命名
+              CONSOLE将日志信息输出到控制上，为方便开发测试使用
+    -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 默认情况下，每个日志事件都会立即刷新到基础输出流。 这种默认方法更安全，因为如果应用程序在没有正确关闭appender的情况下退出，则日志事件不会丢失。
+         但是，为了显着增加日志记录吞吐量，您可能希望将immediateFlush属性设置为false -->
+        <!--<immediateFlush>true</immediateFlush>-->
+        <encoder>
+            <!-- %37():如果字符没有37个字符长度,则左侧用空格补齐 -->
+            <!-- %-37():如果字符没有37个字符长度,则右侧用空格补齐 -->
+            <!-- %15.15():如果记录的线程字符长度小于15(第一个)则用空格在左侧补齐,如果字符长度大于15(第二个),则从开头开始截断多余的字符 -->
+            <!-- %-40.40():如果记录的logger字符长度小于40(第一个)则用空格在右侧补齐,如果字符长度大于40(第二个),则从开头开始截断多余的字符 -->
+            <!-- %msg：日志打印详情 -->
+            <!-- %n:换行符 -->
+            <!-- %highlight():转换说明符以粗体红色显示其级别为ERROR的事件，红色为WARN，BLUE为INFO，以及其他级别的默认颜色。 -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) --- [%15.15(%thread)] %cyan(%-40.40(%logger{40})) : %msg%n</pattern>
+            <!-- 控制台也要使用UTF-8，不要使用GBK，否则会中文乱码 -->
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- 将日志写入数据库 -->
+    <appender name="DBAPPENDER" class="ch.qos.logback.classic.db.DBAppender">
+        <connectionSource class="ch.qos.logback.core.db.DataSourceConnectionSource">
+            <dataSource class="org.apache.commons.dbcp.BasicDataSource">
+                <driverClassName>com.mysql.cj.jdbc.Driver</driverClassName>
+                <url>jdbc:mysql://localhost:3306/linux?characterEncoding=UTF-8</url>
+                <username>linux</username>
+                <password>123456</password>
+            </dataSource>
+        </connectionSource>
+    </appender>
+
+    <appender name="fileErrorLog" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--如果只是想要 Error 级别的日志，那么需要过滤一下，默认是 info 级别的，ThresholdFilter-->
+<!--        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">-->
+<!--            <level>Error</level>-->
+<!--        </filter>-->
+        <!--日志名称，如果没有File 属性，那么只会使用FileNamePattern的文件路径规则
+            如果同时有<File>和<FileNamePattern>，那么当天日志是<File>，明天会自动把今天
+            的日志改名为今天的日期。即，<File> 的日志都是当天的。
+        -->
+        <File>${logback.logdir}/error.${logback.appname}.log</File>
+        <!--滚动策略，按照时间滚动 TimeBasedRollingPolicy-->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!--文件路径,定义了日志的切分方式——把每一天的日志归档到一个文件中,以防止日志填满整个磁盘空间-->
+            <FileNamePattern>${logback.logdir}/error.${logback.appname}.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <!--只保留最近90天的日志-->
+            <maxHistory>90</maxHistory>
+            <!--用来指定日志文件的上限大小，那么到了这个值，就会删除旧的日志-->
+            <!--<totalSizeCap>1GB</totalSizeCap>-->
+        </rollingPolicy>
+        <!--日志输出编码格式化-->
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d [%thread] %-5level %logger{36} %line - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 开发环境:打印控制台 -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="fileErrorLog"/>
+<!--            <appender-ref ref="DBAPPENDER"/>-->
+            <appender-ref ref="STDOUT"/>
+        </root>
+    </springProfile>
+
+</configuration>

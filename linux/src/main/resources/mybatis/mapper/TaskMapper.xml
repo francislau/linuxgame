@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.TaskMapper">
+
+    <select id="queryTaskList" resultType="Task">
+        select *
+        from task t
+                 left join task_resource tr
+                           on t.resource_id = tr.id
+        where t.status = 1
+    </select>
+
+    <select id="queryTaskById" resultType="Task">
+        select *
+        from task t
+                 left join task_resource tr
+                           on t.resource_id = tr.id
+        where t.status = 1
+          and t.id = #{id}
+    </select>
+
+    <insert id="addTask" parameterType="Task" useGeneratedKeys="true" keyProperty="id">
+        insert into task(task_sn, task_title, task_desc, reset, command, answer, error_message, ratio)
+        values (#{taskSn}, #{taskTitle}, #{taskDesc}, #{reset}, #{command}, #{answer}, #{errorMessage}, #{ratio})
+    </insert>
+
+    <update id="updateTask" parameterType="Task">
+        update task
+        set task_title    = #{taskTitle},
+            task_sn       = #{taskSn},
+            task_desc     = #{taskDesc},
+            reset         = #{reset},
+            command       = #{command},
+            answer        = #{answer},
+            error_message = #{errorMessage},
+            ratio         = #{ratio}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTask" parameterType="int">
+        update task
+        set status = -1
+        where id = #{id}
+    </delete>
+
+    <delete id="batchDeleteTask" parameterType="String">
+        update task set status = -1 where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+</mapper>

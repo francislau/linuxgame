@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.ChatMapper">
+
+    <select id="queryChatList" resultMap="ChatMap">
+        select *
+        from chat c
+                 left join user u on c.user_id = u.id
+        where c.status = 1
+          and u.status = 1
+    </select>
+
+
+    <select id="queryChatListByClassId" resultMap="ChatMap">
+        select *
+        from chat c
+                 left join user u on c.user_id = u.id
+        where c.status = 1
+          and u.status = 1
+          and u.stu_class = #{id}
+    </select>
+
+
+    <resultMap id="ChatMap" type="Chat">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="content" column="content"/>
+        <association property="user" javaType="User">
+            <id property="realname" column="realname"/>
+        </association>
+    </resultMap>
+
+    <insert id="addChat" parameterType="Chat" useGeneratedKeys="true" keyProperty="id">
+        insert into chat(user_id, content)
+        values (#{userId}, #{content})
+    </insert>
+</mapper>

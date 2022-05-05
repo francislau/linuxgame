@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.LevelMapper">
+
+    <select id="queryLevelList" resultType="Level">
+        select * from level where status = 1
+    </select>
+
+    <select id="queryLevelById" resultType="Level">
+        select * from level where id = #{id}
+    </select>
+
+    <insert id="addLevel" parameterType="Level" useGeneratedKeys="true" keyProperty="id">
+        insert into level(title, difficulty) values (#{title}, #{difficulty})
+    </insert>
+
+    <update id="updateLevel" parameterType="Level">
+        update level set title = #{title}, difficulty = #{difficulty} where id = #{id}
+    </update>
+
+    <delete id="deleteLevel" parameterType="int">
+        update level set status = -1 where id = #{id}
+    </delete>
+
+    <delete id="batchDeleteLevel" parameterType="String">
+        update level set status = -1 where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+</mapper>

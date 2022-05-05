@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.StudentMapper">
+
+    <select id="queryStudentList" resultMap="Student">
+        select *
+        from user u
+                 left join user_device ud
+                           on u.id = ud.user_id
+        where role = 3
+          and u.status = 1
+    </select>
+
+    <select id="countStudent" resultType="int">
+        select count(*)
+        from user
+        where role = 3
+          and status = 1
+    </select>
+
+    <resultMap id="Student" type="User">
+        <id property="id" column="id"/>
+        <result property="password" column="password"/>
+        <result property="stuNo" column="stu_no"/>
+        <result property="realname" column="realname"/>
+        <result property="stuClass" column="stu_class"/>
+        <result property="defaultMode" column="default_mode"/>
+        <association property="userDevice" javaType="UserDevice">
+            <id property="userId" column="user_id"/>
+            <id property="connPass" column="conn_pass"/>
+            <id property="conn" column="conn"/>
+            <id property="keyCode" column="key_code"/>
+            <id property="connUnverified" column="conn_unverified"/>
+            <id property="keyCodeUnverified" column="key_code_unverified"/>
+            <id property="verifyMsg" column="verify_msg"/>
+            <id property="connPractise" column="conn_practise"/>
+        </association>
+    </resultMap>
+
+    <select id="rankStudent" resultMap="RankMap">
+        select ut.user_id, cast(sum(ut.task_score) as decimal(10,2)) score, count(ut.id) finish, u.realname
+        from user_task ut
+                 left join user u
+                           on ut.user_id = u.id
+        where ut.task_status = 3
+          and u.status = 1
+        group by ut.user_id
+        order by score desc
+    </select>
+
+    <select id="rankStudentByClassId" resultMap="RankMap">
+        select ut.user_id, cast(sum(ut.task_score) as decimal(10,2)) score, count(ut.id) finish, u.realname
+        from user_task ut
+                 left join user u
+                           on ut.user_id = u.id
+        where ut.task_status = 3
+          and u.status = 1
+          and u.stu_class = #{id}
+        group by ut.user_id
+        order by score desc
+    </select>
+
+    <select id="prankStudentByClassId" resultMap="RankMap">
+        select ut.user_id, cast(sum(ut.practise_score) as decimal(10,2)) score, count(ut.id) finish, u.realname
+        from user_task ut
+                 left join user u
+                           on ut.user_id = u.id
+        where ut.practise_min_pass_at is not null
+          and u.status = 1
+          and u.stu_class = #{id}
+        group by ut.user_id
+        order by score desc
+    </select>
+
+    <select id="getScoreById" resultType="double">
+        select cast(sum(ut.task_score) as decimal(10,2)) score
+        from user_task ut
+                 left join user u
+                           on ut.user_id = u.id
+        where ut.task_status = 3
+          and u.status = 1
+          and ut.user_id = #{id}
+        group by ut.user_id
+    </select>
+
+    <resultMap id="RankMap" type="Rank">
+        <id property="id" column="user_id"/>
+        <result property="realname" column="realname"/>
+        <result property="score" column="score"/>
+        <result property="finish" column="finish"/>
+    </resultMap>
+
+    <select id="queryStudentById" resultMap="Student">
+        select *
+        from user u
+                 left join user_device ud
+                           on u.id = ud.user_id
+        where role = 3
+          and u.status = 1
+          and u.id = #{id}
+    </select>
+
+    <select id="queryStudentByStuNo" resultMap="Student">
+        select *
+        from user u
+                 left join user_device ud
+                           on u.id = ud.user_id
+        where role = 3
+          and u.status = 1
+          and u.stu_no = #{stuNo} limit 1
+    </select>
+
+    <select id="queryStudentListByClassId" resultMap="Student">
+        select *
+        from user u
+                 left join user_device ud
+                           on u.id = ud.user_id
+        where role = 3
+          and u.status = 1
+          and u.stu_class = #{id}
+    </select>
+
+    <select id="queryStudentByKeyCodeUnverified" resultType="User">
+        select *
+        from user u
+                 left join user_device ud
+                           on u.id = ud.user_id
+        where role = 3
+          and u.status = 1
+          and u.id != #{id}
+          and (ud.key_code = #{userDevice.keyCodeUnverified}
+           or ud.key_code_unverified = #{userDevice.keyCodeUnverified})
+    </select>
+
+    <update id="updateStudent" parameterType="User">
+        update user u
+        left join user_device ud
+        on u.id = ud.user_id
+        <trim prefix="set" suffixOverrides=",">
+            <if test="password!=null">u.password = #{password},</if>
+            <if test="realname!=null">u.realname = #{realname},</if>
+            <if test="stuNo!=null">u.stu_no = #{stuNo},</if>
+            <if test="stuClass!=null and stuClass!=0">u.stu_class = #{stuClass},</if>
+            <if test="defaultMode!=null and defaultMode!=-1">u.default_mode = #{defaultMode},</if>
+            <if test="userDevice!=null and userDevice.connPass!=null">ud.conn_pass = #{userDevice.connPass},</if>
+            <if test="userDevice!=null and userDevice.conn!=null">ud.conn = #{userDevice.conn},</if>
+            <if test="userDevice!=null and userDevice.keyCode!=null">ud.key_code = #{userDevice.keyCode},</if>
+            <if test="userDevice!=null and userDevice.connUnverified!=null">ud.conn_unverified =
+                #{userDevice.connUnverified},
+            </if>
+            <if test="userDevice!=null and userDevice.keyCodeUnverified!=null">ud.key_code_unverified =
+                #{userDevice.keyCodeUnverified},
+            </if>
+            <if test="userDevice!=null and userDevice.verifyMsg!=null">ud.verify_msg = #{userDevice.verifyMsg},</if>
+            <if test="userDevice!=null and userDevice.connPractise!=null">ud.conn_practise =
+                #{userDevice.connPractise},
+            </if>
+        </trim>
+        where u.id = #{id}
+    </update>
+
+    <insert id="addStudent" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into user(realname, stu_no, stu_class, password)
+        values (#{realname}, #{stuNo}, #{stuClass}, "f379eaf3c831b04de153469d1bec345e");
+        insert into user_device(user_id, conn_pass)
+        values (last_insert_id(),
+                concat(char(floor(rand()*26)+97),substring(md5(rand()), floor(rand() * 26) + 1, 5)));
+    </insert>
+
+    <delete id="deleteStudent" parameterType="int">
+        update user
+        set status = -1
+        where id = #{id}
+    </delete>
+
+    <delete id="batchDeleteStudent" parameterType="String">
+        update user set status = -1 where id in
+        <foreach collection="ids" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+</mapper>

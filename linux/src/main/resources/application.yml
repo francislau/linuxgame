@@ -1,0 +1,33 @@
+spring:
+  datasource:
+    username: linux
+    password: 123456
+#    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/test?useSSL=false&characterEncoding=utf8&autoReconnect=true
+#    url: jdbc:mysql://linux.pingenetwork.com:3306/linux?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+    url: jdbc:mysql://localhost:3306/linux?useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+  jackson:
+    default-property-inclusion: non_null
+  profiles:
+    active: dev
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  mapper-locations: classpath:mybatis/mapper/*.xml
+  type-aliases-package: com.francin.linux.pojo
+custom:
+  check-duuid: blkid | grep -oP 'UUID="\K[^"]+' | sha256sum | awk '{print $1}'
+  map-total: 105
+#logging:
+#  config: classpath:config/logback-spring.xml
+#  level:
+#    org:
+#      springframework:
+#        web: INFO
+websocket:
+  pong:
+    schedule:
+      cron: "*/5 * * * * ?"
+

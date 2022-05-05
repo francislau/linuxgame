@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.francin.linux.mapper.UserTaskRecordMapper">
+
+    <select id="queryUserTaskRecordList" resultMap="UserTaskRecordMap">
+        select *
+        from user_task_record utr
+                 left join user u on utr.user_id = u.id
+                 left join user_task ut on utr.user_task_id = ut.id
+                 left join task t on ut.task_id = t.id
+        order by utr.create_at desc limit 50
+    </select>
+
+    <select id="queryUserTaskRecordListByClassId" resultMap="UserTaskRecordMap">
+        select *
+        from user_task_record utr
+                 left join user u on utr.user_id = u.id
+                 left join user_task ut on utr.user_task_id = ut.id
+                 left join task t on ut.task_id = t.id
+        where utr.status = 1
+          and u.stu_class = #{id}
+        order by utr.create_at desc limit 50
+    </select>
+
+    <resultMap id="UserTaskRecordMap" type="UserTaskRecord">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="userTaskId" column="user_task_id"/>
+        <result property="mode" column="mode"/>
+        <result property="taskStatus" column="task_status"/>
+        <result property="createAt" column="create_at"/>
+        <association property="user" javaType="User">
+            <result property="realname" column="realname"/>
+        </association>
+        <association property="task" javaType="Task">
+            <result property="taskSn" column="task_sn"/>
+        </association>
+    </resultMap>
+
+    <insert id="addUserTaskRecord" parameterType="UserTaskRecord" useGeneratedKeys="true" keyProperty="id">
+        insert into user_task_record(user_id, user_task_id, mode, task_status, key_code)
+        values (#{userId}, #{userTaskId}, #{mode}, #{taskStatus}, #{keyCode})
+    </insert>
+</mapper>
