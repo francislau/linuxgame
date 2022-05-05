@@ -1,0 +1,9 @@
+#server:
+#  port: 8089
+spring:
+  main:
+    web-application-type: none
+remote: linux.pingenetwork.com:8080
+logging:
+  level:
+    root: INFO
